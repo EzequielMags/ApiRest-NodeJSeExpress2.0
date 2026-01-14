@@ -16,7 +16,7 @@ const livroSchema = new mongoose.Schema(
       type: String, 
       required: [true, "A Editora do Livro é obrigatorio"],
       enum: {
-        values: ["Casa do Código", "Alura", "Deus é bom e o diabo n presta"],
+        values: ["Casa do Código", "Alura", "Deus é bom e o diabo n presta", "Dante"],
         message: "A editora {VALUE} não é um valor permitido"
       }
     },

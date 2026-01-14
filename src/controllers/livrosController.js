@@ -1,5 +1,6 @@
+
 import NaoEncontrado from "../erros/NaoEncontrado.js";
-import { livros } from "../models/index.js";
+import { autores, livros } from "../models/index.js";
 import mongoose from "mongoose";
 class LivroController {
 
@@ -77,20 +78,52 @@ class LivroController {
     }
   }
 
-  static listarLivroPorEditora = async (req, res, next) => {
+  static listarLivroPorFiltro = async (req, res, next) => {
     try {
-      const editora = req.query.editora;
+      const busca = await processaBusca(req.query);
 
-      const livrosResultado = await livros.find({"editora": editora});
+      if (busca !== null) {
+        const livrosResultado = await livros.find(busca).populate("autor");
+  
+        res.status(200).send(livrosResultado);
+      }  else {
+        res.status(200).send([])
+      }
 
-      res.status(200).send(livrosResultado);
     } catch (erro) {
       next(erro)
     }
   }
 
-
-
 }
 
+async function processaBusca(req) {
+   // primeira solução com regex
+      // const regexTitulo = new RegExp(titulo, "i")
+      // const regexEditora = new RegExp(editora, "i")
+      const { editora, titulo, minPaginas, maxPaginas, nomeAutor } =  req
+     
+      let busca = {}
+      
+      // segunda solução com regex
+      if (editora) busca.editora = { $regex: editora, $options: "i" } 
+      if (titulo) busca.titulo = { $regex: titulo, $options: "i"}
+
+    if (minPaginas || maxPaginas) busca.numeroPaginas = {
+        $gte: minPaginas || 0,
+        $lte: maxPaginas || 5000
+    }
+
+    if (nomeAutor) {
+      const autor = await autores.findOne({ nome: nomeAutor }) 
+      if (autor !== null) {
+        busca.autor = autor._id
+      } else {
+        busca = null
+      }
+
+    }
+
+    return busca
+}
 export default LivroController
